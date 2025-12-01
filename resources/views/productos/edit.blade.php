@@ -1,28 +1,51 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h1 class="text-xl font-semibold text-gray-100">Editar Producto</h1>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg shadow max-w-4xl mx-auto">
+@section('title', 'Editar producto')
 
-        <form method="POST" action="{{ route('productos.update', $producto->id) }}">
+@section('content')
+
+<div class="max-w-4xl mx-auto space-y-4">
+
+    {{-- Encabezado --}}
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">
+            ✏️ Editar producto
+        </h1>
+
+        <a href="{{ route('productos.index') }}"
+           class="text-sm text-blue-600 hover:text-blue-800">
+            ← Volver a productos
+        </a>
+    </div>
+
+    {{-- Card principal --}}
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm p-6">
+
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            Modificar datos del producto
+        </h2>
+
+        <form method="POST" action="{{ route('productos.update', $producto->id) }}" class="space-y-4">
             @csrf
             @method('PUT')
 
-            {{-- Formulario (reutilizado del partial) --}}
+            {{-- Partial ya estandarizado --}}
             @include('productos.partials._form', [
                 'producto' => $producto
             ])
 
-            {{-- BOTÓN PARA ACTUALIZAR --}}
+            {{-- Botón actualizar --}}
             <div class="mt-6 flex justify-end">
                 <button
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded transition">
-                    Actualizar Producto
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md shadow-sm transition">
+                    Actualizar producto
                 </button>
             </div>
 
         </form>
 
     </div>
-</x-app-layout>
+
+</div>
+
+@endsection

@@ -2,24 +2,24 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Controllers principales
+// Controllers principales (WEB)
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentosController;
-use App\Http\Controllers\Sifen\LotesController;
+use App\Http\Controllers\Sifen\LotesController as SifenLotesController;
 use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\UsuarioController;
 
-// SIFEN
+// SIFEN (WEB)
 use App\Http\Controllers\Sifen\ClienteController;
 use App\Http\Controllers\Sifen\EventoController;
 use App\Http\Controllers\Sifen\SifenController;
 
 /*
 |--------------------------------------------------------------------------
-| RUTAS AUTENTICADAS
+| RUTAS AUTENTICADAS (WEB)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
@@ -37,7 +37,8 @@ Route::middleware(['auth'])->group(function () {
     | AUDITORÍA
     |--------------------------------------------------------------------------
     */
-    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])
+        ->name('auditoria.index');
 
     /*
     |--------------------------------------------------------------------------
@@ -46,37 +47,43 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::prefix('documentos')->name('documentos.')->group(function () {
 
-        Route::get('/', [DocumentosController::class, 'index'])->name('index');
-        Route::get('/crear', [DocumentosController::class, 'create'])->name('create');
-        Route::post('/', [DocumentosController::class, 'store'])->name('store');
+        // CRUD básico
+        Route::get('/',           [DocumentosController::class, 'index'])->name('index');
+        Route::get('/crear',      [DocumentosController::class, 'create'])->name('create');
+        Route::post('/',          [DocumentosController::class, 'store'])->name('store');
 
-        Route::get('/{id}', [DocumentosController::class, 'show'])->name('show');
-        Route::get('/{id}/editar', [DocumentosController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [DocumentosController::class, 'update'])->name('update');
-        Route::delete('/{id}', [DocumentosController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}',       [DocumentosController::class, 'show'])->name('show');
+        Route::get('/{id}/editar',[DocumentosController::class, 'edit'])->name('edit');
+        Route::put('/{id}',       [DocumentosController::class, 'update'])->name('update');
+        Route::delete('/{id}',    [DocumentosController::class, 'destroy'])->name('destroy');
 
-        // Acciones SIFEN
+        // Acciones SIFEN / auxiliares
         Route::post('/{id}/enviar', [DocumentosController::class, 'enviar'])->name('enviar');
-        Route::get('/{id}/pdf', [DocumentosController::class, 'pdf'])->name('pdf');
-        Route::get('/{id}/xml', [DocumentosController::class, 'xml'])->name('xml');
-        Route::get('/{id}/firmar', [DocumentosController::class, 'firmar'])->name('firmar');
+        Route::get('/{id}/pdf',     [DocumentosController::class, 'pdf'])->name('pdf');
+        Route::get('/{id}/xml',     [DocumentosController::class, 'xml'])->name('xml');
+        Route::get('/{id}/firmar',  [DocumentosController::class, 'firmar'])->name('firmar');
     });
 
     /*
     |--------------------------------------------------------------------------
-    | LOTES
+    | LOTES SIFEN
     |--------------------------------------------------------------------------
     */
     Route::prefix('lotes')->name('lotes.')->group(function () {
-        Route::get('/', [LotesController::class, 'index'])->name('index');
-        Route::get('/{id}', [LotesController::class, 'show'])->name('show');
-        Route::post('/{id}/enviar', [LotesController::class, 'enviar'])->name('enviar');
-        Route::get('/{id}/consultar', [LotesController::class, 'consultar'])->name('consultar');
+
+        Route::get('/',             [SifenLotesController::class, 'index'])->name('index');
+        Route::get('{lote}',        [SifenLotesController::class, 'show'])->name('show');
+
+        // XML del lote (vista detallada)
+        Route::get('{lote}/xml',    [SifenLotesController::class, 'verXml'])->name('xml');
+
+        // Envío del lote a SIFEN
+        Route::post('{lote}/enviar',[SifenLotesController::class, 'enviar'])->name('enviar');
     });
 
     /*
     |--------------------------------------------------------------------------
-    | USUARIOS
+    | USUARIOS (ADMIN)
     |--------------------------------------------------------------------------
     */
     Route::resource('usuarios', UsuarioController::class);
@@ -87,10 +94,10 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('eventos')->name('eventos.')->group(function () {
-        Route::get('/', [EventoController::class, 'index'])->name('index');
+        Route::get('/',      [EventoController::class, 'index'])->name('index');
         Route::get('/crear', [EventoController::class, 'create'])->name('create');
-        Route::post('/', [EventoController::class, 'store'])->name('store');
-        Route::get('/{id}', [EventoController::class, 'show'])->name('show');
+        Route::post('/',     [EventoController::class, 'store'])->name('store');
+        Route::get('/{id}',  [EventoController::class, 'show'])->name('show');
     });
 
     /*
@@ -99,6 +106,8 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::resource('clientes', ClienteController::class);
+
+    // Búsqueda AJAX de clientes
     Route::get('/api/clientes/buscar', [ClienteController::class, 'buscar'])
         ->name('clientes.buscar');
 
@@ -108,43 +117,49 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::resource('productos', ProductoController::class);
+
     Route::post('/productos/{producto}/desactivar', [ProductoController::class, 'desactivar'])
         ->name('productos.desactivar');
+
     Route::post('/productos/{producto}/activar', [ProductoController::class, 'activar'])
         ->name('productos.activar');
+
+    // Búsqueda AJAX de productos
     Route::get('/api/productos/buscar', [ProductoController::class, 'buscar'])
         ->name('api.productos.buscar');
 
     /*
     |--------------------------------------------------------------------------
-    | CONFIGURACIÓN
+    | CONFIGURACIÓN / EMPRESA / CERTIFICADOS
     |--------------------------------------------------------------------------
     */
     Route::prefix('config')->name('config.')->group(function () {
-        Route::get('/empresa', [EmpresaController::class, 'edit'])->name('empresa');
+
+        // Datos de la empresa
+        Route::get('/empresa',  [EmpresaController::class, 'edit'])->name('empresa');
         Route::post('/empresa', [EmpresaController::class, 'update'])->name('empresa.update');
 
-        Route::get('/certificados', [EmpresaController::class, 'certificados'])->name('certificados');
+        // Certificados (P12 / PEM / etc.)
+        Route::get('/certificados',  [EmpresaController::class, 'certificados'])->name('certificados');
         Route::post('/certificados', [EmpresaController::class, 'guardarCertificados'])
             ->name('certificados.update');
     });
 
     /*
     |--------------------------------------------------------------------------
-    | SIFEN TEST
+    | SIFEN – RUTAS DE DEMO / TEST
     |--------------------------------------------------------------------------
     */
     Route::prefix('sifen')->group(function () {
-        Route::get('/test', [SifenController::class, 'test']);
-        Route::get('/demo/preparar', [SifenController::class, 'demoPrepararDocumento']);
-        Route::get('/demo/enviar-lote', [SifenController::class, 'demoEnviarLote']);
+        Route::get('/test',            [SifenController::class, 'test']);
+        Route::get('/demo/preparar',   [SifenController::class, 'demoPrepararDocumento']);
+        Route::get('/demo/enviar-lote',[SifenController::class, 'demoEnviarLote']);
     });
-
 });
 
 /*
 |--------------------------------------------------------------------------
-| AUTENTICACIÓN (Breeze)
+| AUTENTICACIÓN (Breeze / Fortify / Jetstream)
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/auth.php';
@@ -155,5 +170,12 @@ require __DIR__ . '/auth.php';
 |--------------------------------------------------------------------------
 */
 Route::fallback(function () {
-    return response()->view('errors.404', [], 404);
+    if (request()->expectsJson() || request()->is('api/*')) {
+        return response()->json([
+            'message' => 'Ruta no encontrada',
+        ], 404);
+    }
+
+    return response('Página no encontrada', 404);
 });
+

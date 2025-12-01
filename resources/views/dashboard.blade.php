@@ -8,41 +8,41 @@
 
     {{-- Título --}}
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
             📊 Dashboard General
         </h1>
-        <span class="text-gray-400">Sistema de Facturación Electrónica</span>
+        <span class="text-sm text-gray-500">Sistema de Facturación Electrónica</span>
     </div>
 
     {{-- Tarjetas estadísticas --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow hover:shadow-lg transition">
-            <h6 class="text-gray-400">Documentos del día</h6>
-            <h2 class="text-3xl font-bold text-blue-400">{{ $totales['hoy'] }}</h2>
-            <p class="text-gray-500 text-sm mt-1">Emitidos hoy</p>
+        <div class="bg-white border border-gray-200 rounded-md p-4 shadow-sm">
+            <h6 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Documentos del día</h6>
+            <h2 class="mt-2 text-3xl font-semibold text-gray-800">{{ $totales['hoy'] }}</h2>
+            <p class="mt-1 text-sm text-gray-500">Emitidos hoy</p>
         </div>
 
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow hover:shadow-lg transition">
-            <h6 class="text-gray-400">Monto Total</h6>
-            <h2 class="text-3xl font-bold text-green-400">
+        <div class="bg-white border border-gray-200 rounded-md p-4 shadow-sm">
+            <h6 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Monto total</h6>
+            <h2 class="mt-2 text-2xl font-semibold text-gray-800">
                 Gs. {{ number_format($totales['total_general'], 0, ',', '.') }}
             </h2>
-            <p class="text-gray-500 text-sm mt-1">Acumulado del sistema</p>
+            <p class="mt-1 text-sm text-gray-500">Acumulado del sistema</p>
         </div>
 
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow hover:shadow-lg transition">
-            <h6 class="text-gray-400">IVA Total</h6>
-            <h2 class="text-3xl font-bold text-yellow-400">
+        <div class="bg-white border border-gray-200 rounded-md p-4 shadow-sm">
+            <h6 class="text-xs font-medium text-gray-500 uppercase tracking-wide">IVA total</h6>
+            <h2 class="mt-2 text-2xl font-semibold text-gray-800">
                 Gs. {{ number_format($totales['total_iva'], 0, ',', '.') }}
             </h2>
-            <p class="text-gray-500 text-sm mt-1">Calculado según documentos</p>
+            <p class="mt-1 text-sm text-gray-500">Calculado según documentos</p>
         </div>
 
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 shadow hover:shadow-lg transition">
-            <h6 class="text-gray-400">Aprobados SIFEN</h6>
-            <h2 class="text-3xl font-bold text-green-500">{{ $totales['total_aprobados'] }}</h2>
-            <p class="text-gray-500 text-sm mt-1">Documentos validados</p>
+        <div class="bg-white border border-gray-200 rounded-md p-4 shadow-sm">
+            <h6 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Aprobados SIFEN</h6>
+            <h2 class="mt-2 text-3xl font-semibold text-gray-800">{{ $totales['total_aprobados'] }}</h2>
+            <p class="mt-1 text-sm text-gray-500">Documentos validados</p>
         </div>
 
     </div>
@@ -50,20 +50,20 @@
     {{-- Gráficos --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        <div class="lg:col-span-2 bg-gray-800 border border-gray-700 rounded-lg shadow">
-            <div class="px-5 py-3 border-b border-gray-700 font-bold text-gray-200">
-                📈 Documentos por Mes
+        <div class="lg:col-span-2 bg-white border border-gray-200 rounded-md shadow-sm">
+            <div class="px-4 py-3 border-b border-gray-200 text-sm font-semibold text-gray-700">
+                📈 Documentos por mes
             </div>
-            <div class="p-5">
+            <div class="p-4">
                 <canvas id="graf_mes" height="120"></canvas>
             </div>
         </div>
 
-        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow">
-            <div class="px-5 py-3 border-b border-gray-700 font-bold text-gray-200">
+        <div class="bg-white border border-gray-200 rounded-md shadow-sm">
+            <div class="px-4 py-3 border-b border-gray-200 text-sm font-semibold text-gray-700">
                 📊 Estado SIFEN
             </div>
-            <div class="p-5">
+            <div class="p-4">
                 <canvas id="graf_sifen" height="180"></canvas>
             </div>
         </div>
@@ -71,65 +71,68 @@
     </div>
 
     {{-- Tabla últimos documentos --}}
-    <div class="bg-gray-800 border border-gray-700 rounded-lg shadow overflow-hidden">
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
 
-        <div class="px-5 py-3 border-b border-gray-700 font-bold text-gray-200">
-            🧾 Últimos Documentos Emitidos
+        <div class="px-4 py-3 border-b border-gray-200 text-sm font-semibold text-gray-700">
+            🧾 Últimos documentos emitidos
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full border-collapse">
-                <thead class="bg-gray-700 text-gray-300 text-sm uppercase">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase tracking-wide text-xs">
                     <tr>
-                        <th class="px-4 py-3 text-left">#</th>
-                        <th class="px-4 py-3 text-left">Fecha</th>
-                        <th class="px-4 py-3 text-left">Cliente</th>
-                        <th class="px-4 py-3 text-left">Total</th>
-                        <th class="px-4 py-3 text-left">Estado SIFEN</th>
-                        <th class="px-4 py-3 text-right">Acciones</th>
+                        <th class="px-4 py-2 text-left">#</th>
+                        <th class="px-4 py-2 text-left">Fecha</th>
+                        <th class="px-4 py-2 text-left">Cliente</th>
+                        <th class="px-4 py-2 text-left">Total</th>
+                        <th class="px-4 py-2 text-left">Estado SIFEN</th>
+                        <th class="px-4 py-2 text-right">Acciones</th>
                     </tr>
                 </thead>
 
-                <tbody class="divide-y divide-gray-700">
+                <tbody class="divide-y divide-gray-200 bg-white">
 
                     @foreach ($ultimos as $doc)
-                        <tr class="hover:bg-gray-700/50 transition">
-                            <td class="px-4 py-3 text-gray-300">{{ $doc->id }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $doc->fecha }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $doc->cliente_nombre }}</td>
-                            <td class="px-4 py-3 text-gray-300">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 text-gray-700">{{ $doc->id }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ $doc->fecha }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ $doc->cliente_nombre }}</td>
+                            <td class="px-4 py-2 text-gray-700">
                                 Gs. {{ number_format($doc->total, 0, ',', '.') }}
                             </td>
-                            <td class="px-4 py-3">
-
+                            <td class="px-4 py-2">
                                 @if($doc->estado_sifen == 'aceptado')
-                                    <span class="px-2 py-1 rounded bg-green-600 text-white text-xs">Aceptado</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                                        Aceptado
+                                    </span>
                                 @elseif($doc->estado_sifen == 'pendiente')
-                                    <span class="px-2 py-1 rounded bg-yellow-500 text-black text-xs">Pendiente</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium">
+                                        Pendiente
+                                    </span>
                                 @else
-                                    <span class="px-2 py-1 rounded bg-red-600 text-white text-xs">Rechazado</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+                                        Rechazado
+                                    </span>
                                 @endif
-
                             </td>
 
-                            <td class="px-4 py-3 text-right">
+                            <td class="px-4 py-2 text-right space-x-2">
                                 <a href="{{ route('documentos.show', $doc->id) }}"
-                                   class="inline-block px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+                                   class="inline-flex items-center px-3 py-1 rounded-md border border-blue-500 text-blue-600 text-xs font-medium hover:bg-blue-50">
                                     Ver
                                 </a>
 
                                 <a href="{{ route('documentos.pdf', $doc->id) }}" target="_blank"
-                                   class="inline-block px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                                   class="inline-flex items-center px-3 py-1 rounded-md border border-red-500 text-red-600 text-xs font-medium hover:bg-red-50">
                                     PDF
                                 </a>
                             </td>
-
                         </tr>
                     @endforeach
 
                     @if($ultimos->count() == 0)
                         <tr>
-                            <td colspan="6" class="text-center py-6 text-gray-500">
+                            <td colspan="6" class="text-center py-6 text-gray-500 text-sm">
                                 No hay documentos recientes
                             </td>
                         </tr>
@@ -145,7 +148,6 @@
 
 @endsection
 
-
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -158,17 +160,27 @@
             datasets: [{
                 label: 'Documentos',
                 data: {!! json_encode($grafico_meses['data']) !!},
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59,130,246,0.25)',
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.12)',
                 tension: 0.3,
                 fill: true,
             }]
         },
         options: {
-            plugins: { legend: { labels: { color: '#ddd' } } },
+            plugins: {
+                legend: {
+                    labels: { color: '#374151' } // gris oscuro
+                }
+            },
             scales: {
-                x: { ticks: { color: '#bbb' } },
-                y: { ticks: { color: '#bbb' } },
+                x: {
+                    ticks: { color: '#6b7280' }, // gris medio
+                    grid: { color: '#e5e7eb' }
+                },
+                y: {
+                    ticks: { color: '#6b7280' },
+                    grid: { color: '#e5e7eb' }
+                }
             }
         }
     });
@@ -188,7 +200,11 @@
             }]
         },
         options: {
-            plugins: { legend: { labels: { color: '#ddd' } } }
+            plugins: {
+                legend: {
+                    labels: { color: '#374151' }
+                }
+            }
         }
     });
 </script>

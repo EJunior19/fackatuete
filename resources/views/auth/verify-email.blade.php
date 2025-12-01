@@ -1,31 +1,66 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+    <div class="max-w-md mx-auto mt-10 mb-10">
+
+        {{-- LOGO + TÍTULO --}}
+        <div class="flex flex-col items-center mb-6">
+            <img src="{{ asset('images/fackatuete/logo-login.svg') }}"
+                 alt="Logo FACKATUETE"
+                 class="h-12 w-auto mb-3">
+
+            <h1 class="text-2xl font-bold text-gray-800 tracking-tight text-center">
+                Verificación de correo electrónico
+            </h1>
+
+            <p class="text-sm text-gray-500 mt-1 text-center">
+                Gracias por registrarte. Antes de continuar, por favor verificá tu correo
+                haciendo clic en el enlace que te enviamos.
+            </p>
         </div>
-    @endif
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
+        {{-- TARJETA --}}
+        <div class="bg-white shadow-sm border border-gray-200 rounded-xl px-6 py-6">
 
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
+            {{-- Mensaje cuando se reenvía el enlace --}}
+            @if (session('status') == 'verification-link-sent')
+                <div class="mb-4 text-sm font-medium text-green-600">
+                    Se envió un nuevo enlace de verificación al correo electrónico que registraste.
+                </div>
+            @endif
+
+            <div class="text-sm text-gray-600 mb-4">
+                Si no recibiste el correo, podés solicitar otro enlace de verificación.
             </div>
-        </form>
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
+            <div class="mt-4 flex items-center justify-between">
 
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {{ __('Log Out') }}
-            </button>
-        </form>
+                {{-- Reenviar enlace --}}
+                <form method="POST" action="{{ route('verification.send') }}">
+                    @csrf
+
+                    <x-primary-button>
+                        Reenviar enlace
+                    </x-primary-button>
+                </form>
+
+                {{-- Cerrar sesión --}}
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <button type="submit"
+                        class="underline text-sm text-gray-500 hover:text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+        {{-- FOOTER --}}
+        <p class="text-center text-xs text-gray-400 mt-4">
+            &copy; {{ date('Y') }} FACKATUETE · Sistema de Facturación Electrónica
+        </p>
+
     </div>
+
 </x-guest-layout>

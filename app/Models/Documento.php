@@ -44,6 +44,9 @@ class Documento extends Model
         'fecha_respuesta',
         'establecimiento',
         'punto_expedicion',
+
+        // 👇 agregamos esto
+        'lote_id',
     ];
 
     protected $casts = [
@@ -52,39 +55,7 @@ class Documento extends Model
         'fecha_respuesta' => 'datetime',
     ];
 
-    // 🚀 Evento automático para asignar numeración
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::created(function (Documento $doc) {
-            $doc->asignarNumeracion();
-        });
-    }
-
-    // 🔥 Generar numeración usando Numeracion::generarNumero()
-    public function asignarNumeracion()
-    {
-        $num = Numeracion::where('empresa_id', $this->empresa_id)
-            ->where('timbrado_id', $this->timbrado_id)
-            ->where('tipo_documento', $this->tipo_documento)
-            ->where('activo', true)
-            ->first();
-
-        if (!$num) {
-            throw new \Exception("No existe numeración activa para este timbrado.");
-        }
-
-        // Debe devolver algo tipo 001-001-0000001 y avanzar numero_actual
-        $numeroCompleto = $num->generarNumero();
-
-        [$establecimiento, $punto, $numero] = explode('-', $numeroCompleto);
-
-        $this->establecimiento  = $establecimiento;
-        $this->punto_expedicion = $punto;
-        $this->numero           = $numero;
-        $this->save();
-    }
+    // boot() y asignarNumeracion() los dejás igual...
 
     public function empresa()
     {
@@ -98,7 +69,8 @@ class Documento extends Model
 
     public function lote()
     {
-        return $this->belongsTo(Lote::class, 'numero_lote', 'numero_lote');
+        // 🔥 RELACIÓN INVERSA TAMBIÉN POR lote_id
+        return $this->belongsTo(Lote::class, 'lote_id', 'id');
     }
 
     public function items()

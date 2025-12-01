@@ -1,31 +1,62 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h1 class="text-xl font-semibold text-gray-100">Detalle del Producto</h1>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg shadow max-w-3xl mx-auto">
+@section('title', 'Detalle del producto')
 
-        {{-- Título --}}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">
-            {{ $producto->descripcion }}
+@section('content')
+
+<div class="max-w-3xl mx-auto space-y-4">
+
+    {{-- ENCABEZADO --}}
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">
+            Detalle del producto
         </h1>
 
-        {{-- INFORMACIÓN GENERAL --}}
-        <div class="space-y-2 text-sm text-gray-300">
+        <a href="{{ route('productos.index') }}"
+           class="text-sm text-blue-600 hover:text-blue-800">
+            ← Volver a productos
+        </a>
+    </div>
 
-            <p><strong class="text-gray-400">Código:</strong> {{ $producto->codigo }}</p>
-            <p><strong class="text-gray-400">Categoría:</strong> {{ $producto->categoria ?? '-' }}</p>
-            <p><strong class="text-gray-400">Unidad:</strong> {{ $producto->unidad_medida }}</p>
-            <p><strong class="text-gray-400">IVA:</strong> {{ $producto->iva }}%</p>
+    {{-- CARD PRINCIPAL --}}
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm p-6">
+
+        {{-- Título --}}
+        <h2 class="text-xl font-bold text-gray-900 mb-4">
+            {{ $producto->descripcion }}
+        </h2>
+
+        {{-- INFORMACIÓN GENERAL --}}
+        <div class="space-y-2 text-sm text-gray-700">
 
             <p>
-                <strong class="text-gray-400">Estado:</strong>
+                <span class="font-semibold text-gray-600">Código:</span>
+                {{ $producto->codigo }}
+            </p>
+
+            <p>
+                <span class="font-semibold text-gray-600">Categoría:</span>
+                {{ $producto->categoria ?? '-' }}
+            </p>
+
+            <p>
+                <span class="font-semibold text-gray-600">Unidad:</span>
+                {{ $producto->unidad_medida }}
+            </p>
+
+            <p>
+                <span class="font-semibold text-gray-600">IVA:</span>
+                {{ $producto->iva }}%
+            </p>
+
+            <p>
+                <span class="font-semibold text-gray-600">Estado:</span>
                 @if($producto->activo)
-                    <span class="px-2 py-1 text-xs rounded bg-green-900 text-green-300 border border-green-700">
+                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-300">
                         Activo
                     </span>
                 @else
-                    <span class="px-2 py-1 text-xs rounded bg-red-900 text-red-300 border border-red-700">
+                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-300">
                         Inactivo
                     </span>
                 @endif
@@ -33,39 +64,39 @@
 
         </div>
 
-        <hr class="my-5 border-gray-700">
+        <hr class="my-5 border-gray-200">
 
         {{-- PRECIOS --}}
-        <h2 class="font-semibold text-lg text-gray-100 mb-3">Precios</h2>
+        <h3 class="font-semibold text-lg text-gray-800 mb-3">Precios</h3>
 
-        <div class="grid grid-cols-1 gap-2 text-sm text-gray-300">
+        <div class="grid grid-cols-1 gap-2 text-sm text-gray-700">
 
             <p>
-                <strong class="text-gray-400">Precio 1:</strong>
+                <span class="font-semibold text-gray-600">Precio 1:</span>
                 Gs. {{ number_format($producto->precio_1, 0, '.', '.') }}
             </p>
 
             @if($producto->precio_2)
-            <p>
-                <strong class="text-gray-400">Precio 2:</strong>
-                Gs. {{ number_format($producto->precio_2, 0, '.', '.') }}
-            </p>
+                <p>
+                    <span class="font-semibold text-gray-600">Precio 2:</span>
+                    Gs. {{ number_format($producto->precio_2, 0, '.', '.') }}
+                </p>
             @endif
 
             @if($producto->precio_3)
-            <p>
-                <strong class="text-gray-400">Precio 3:</strong>
-                Gs. {{ number_format($producto->precio_3, 0, '.', '.') }}
-            </p>
+                <p>
+                    <span class="font-semibold text-gray-600">Precio 3:</span>
+                    Gs. {{ number_format($producto->precio_3, 0, '.', '.') }}
+                </p>
             @endif
+
         </div>
 
         {{-- BOTONES --}}
-        <div class="mt-8 flex justify-between">
+        <div class="mt-8 flex justify-between items-center">
 
-            {{-- VOLVER --}}
             <a href="{{ route('productos.index') }}"
-                class="px-4 py-2 bg-gray-800 text-gray-300 rounded border border-gray-600 hover:bg-gray-700 transition">
+               class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 transition">
                 ← Volver
             </a>
 
@@ -73,7 +104,7 @@
 
                 {{-- EDITAR --}}
                 <a href="{{ route('productos.edit', $producto) }}"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition">
+                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm transition">
                     Editar
                 </a>
 
@@ -82,7 +113,7 @@
                     <form method="POST" action="{{ route('productos.desactivar', $producto->id) }}">
                         @csrf
                         <button
-                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition">
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm transition">
                             Desactivar
                         </button>
                     </form>
@@ -90,7 +121,7 @@
                     <form method="POST" action="{{ route('productos.activar', $producto->id) }}">
                         @csrf
                         <button
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm transition">
                             Activar
                         </button>
                     </form>
@@ -100,4 +131,7 @@
         </div>
 
     </div>
-</x-app-layout>
+
+</div>
+
+@endsection

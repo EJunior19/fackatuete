@@ -9,8 +9,9 @@ use App\Services\Sifen\SifenClient;
 
 class LotesController extends Controller
 {
-    public function index()
+   public function index()
     {
+       
         $lotes = Lote::orderBy('id', 'DESC')->paginate(20);
         return view('lotes.index', compact('lotes'));
     }
@@ -25,29 +26,25 @@ class LotesController extends Controller
     {
         $lote = Lote::findOrFail($id);
 
-        $client = app(SifenClient::class);
+        $client    = app(SifenClient::class);
         $respuesta = $client->enviarLote($lote);
 
         return back()->with('success', 'Lote enviado correctamente');
     }
 
-    public function consultar($id)
-    {
-        $lote = Lote::findOrFail($id);
+    public function verXml(Lote $lote, LoteService $loteService)
+{
+    $lote->load('documentos');
 
-        $client = app(SifenClient::class);
-        $respuesta = $client->consultarLote($lote);
+    $xmlEnviado   = $lote->xml_enviado;
+    $xmlRespuesta = $lote->xml_respuesta ?? $lote->respuesta ?? null;
 
-        return back()->with('success', 'Consulta realizada');
-    }
+    return view('lotes.xml', [
+        'lote'         => $lote,
+        'xmlEnviado'   => $xmlEnviado,
+        'xmlRespuesta' => $xmlRespuesta,
+    ]);
+}
 
-    public function xml($id)
-    {
-        $lote = Lote::findOrFail($id);
 
-        return view('lotes.xml', [
-            'xml' => $lote->xml_enviado,
-            'xml_recibido' => $lote->xml_respuesta
-        ]);
-    }
 }

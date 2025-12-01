@@ -1,40 +1,47 @@
-<x-app-layout>
+@extends('layouts.app')
 
-    <!-- Header -->
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-100">
-            ✏️ Editar Documento
-        </h2>
-    </x-slot>
+@section('title', 'Editar documento')
 
-    <div class="max-w-5xl mx-auto mt-6 bg-gray-800 text-gray-100 rounded-xl shadow-lg border border-gray-700">
+@section('content')
 
-        <div class="p-6 space-y-5">
+<div class="max-w-5xl mx-auto space-y-4">
 
-            <!-- Título interno -->
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold">Modificar Datos del Documento</h3>
+    {{-- Encabezado --}}
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">
+            ✏️ Editar documento
+        </h1>
 
-                <a href="{{ route('documentos.index') }}"
-                   class="text-sm text-gray-300 hover:text-white transition">
-                    ← Volver a Documentos
-                </a>
-            </div>
+        <a href="{{ route('documentos.index') }}"
+           class="text-sm text-blue-600 hover:text-blue-800">
+            ← Volver a documentos
+        </a>
+    </div>
 
-            <!-- Formulario -->
-            <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+    {{-- Card principal --}}
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm p-6">
 
-                @include('documentos._form', [
-                    'action' => route('documentos.update', $documento->id),
-                    'method' => 'PUT',
-                    'buttonText' => 'Actualizar Documento',
-                    'documento' => $documento
-                ])
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">
+                Modificar datos del documento
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">
+                Ajuste los datos necesarios y guarde los cambios.
+            </p>
+        </div>
 
-            </div>
-
+        {{-- Formulario --}}
+        <div class="mt-4">
+            @include('documentos._form', [
+                'action'      => route('documentos.update', $documento->id),
+                'method'      => 'PUT',
+                'buttonText'  => 'Actualizar documento',
+                'documento'   => $documento,
+            ])
         </div>
 
     </div>
 
-</x-app-layout>
+</div>
+
+@endsection

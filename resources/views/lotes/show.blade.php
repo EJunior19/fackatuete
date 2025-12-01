@@ -1,74 +1,108 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-100">
-            Detalles del Lote #{{ $lote->id }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700 max-w-4xl mx-auto">
+@section('title', 'Lote #'.$lote->id)
 
-        <!-- Información del lote -->
-        <h3 class="text-2xl font-bold text-gray-100 mb-4">Información del lote</h3>
+@section('content')
 
-        <div class="space-y-2 text-gray-300">
-            <p><span class="font-semibold text-gray-200">Número de lote:</span> {{ $lote->numero_lote }}</p>
-            <p><span class="font-semibold text-gray-200">Cantidad:</span> {{ $lote->cantidad }}</p>
+<div class="max-w-6xl mx-auto space-y-6">
+
+    {{-- ENCABEZADO --}}
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">
+            📦 Lote #{{ $lote->id }}
+        </h1>
+
+        <a href="{{ route('lotes.index') }}"
+           class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded shadow-sm text-sm">
+            ← Volver a Lotes
+        </a>
+    </div>
+
+    {{-- CARD PRINCIPAL --}}
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm p-6 space-y-6">
+
+        {{-- INFO DEL LOTE --}}
+        <div class="space-y-2 text-sm text-gray-700">
+            <p>
+                <span class="font-semibold text-gray-800">Número de lote:</span>
+                {{ $lote->numero_lote }}
+            </p>
 
             <p>
-                <span class="font-semibold text-gray-200">Estado:</span>
+                <span class="font-semibold text-gray-800">Cantidad de documentos:</span>
+                {{ $lote->cantidad }}
+            </p>
 
-                <span class="px-2 py-1 rounded text-xs font-semibold ml-1
-                    @if($lote->estado == 'pendiente') bg-yellow-500/20 text-yellow-300
-                    @elseif($lote->estado == 'enviado') bg-green-500/20 text-green-300
-                    @else bg-red-500/20 text-red-300 @endif">
+            <p>
+                <span class="font-semibold text-gray-800">Estado:</span>
+                <span class="px-2 py-1 rounded-full text-xs font-medium
+                    @if($lote->estado == 'pendiente')
+                        bg-yellow-100 text-yellow-700
+                    @elseif($lote->estado == 'enviado')
+                        bg-green-100 text-green-700
+                    @else
+                        bg-red-100 text-red-700
+                    @endif">
                     {{ ucfirst($lote->estado) }}
                 </span>
             </p>
 
-            <p><span class="font-semibold text-gray-200">Protocolo:</span> {{ $lote->protocolo ?? '-' }}</p>
+            <p>
+                <span class="font-semibold text-gray-800">Protocolo:</span>
+                {{ $lote->protocolo ?? '-' }}
+            </p>
         </div>
 
-        <hr class="my-6 border-gray-700">
+        {{-- DOCUMENTOS DEL LOTE --}}
+        <div class="space-y-3">
+            <h2 class="text-lg font-semibold text-gray-800">
+                Documentos incluidos
+            </h2>
 
-        <!-- Documentos incluidos -->
-        <h3 class="text-xl font-bold text-gray-100 mb-3">Documentos incluidos</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse text-gray-700">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700">
+                            <th class="border border-gray-200 px-3 py-2 text-left">CDC</th>
+                            <th class="border border-gray-200 px-3 py-2 text-left">Tipo</th>
+                            <th class="border border-gray-200 px-3 py-2 text-right">Total</th>
+                            <th class="border border-gray-200 px-3 py-2 text-center">Acciones</th>
+                        </tr>
+                    </thead>
 
-        <table class="w-full text-sm border-collapse">
-            <thead>
-                <tr class="bg-gray-800 text-gray-200">
-                    <th class="border border-gray-700 px-3 py-2">CDC</th>
-                    <th class="border border-gray-700 px-3 py-2">Tipo</th>
-                    <th class="border border-gray-700 px-3 py-2">Total</th>
-                    <th class="border border-gray-700 px-3 py-2">Acciones</th>
-                </tr>
-            </thead>
-
-            <tbody class="text-gray-300">
-                @foreach($lote->documentos as $doc)
-                <tr class="hover:bg-gray-800 transition">
-                    <td class="border border-gray-700 px-3 py-2">{{ $doc->cdc }}</td>
-                    <td class="border border-gray-700 px-3 py-2">{{ $doc->tipo_documento }}</td>
-                    <td class="border border-gray-700 px-3 py-2">
-                        {{ number_format($doc->total, 0, ',', '.') }} Gs.
-                    </td>
-                    <td class="border border-gray-700 px-3 py-2">
-                        <a href="{{ route('documentos.show', $doc->id) }}"
-                           class="text-indigo-400 hover:text-indigo-300 font-medium">
-                            Ver documento
-                        </a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <!-- Botón volver -->
-        <div class="mt-6">
-            <a href="{{ route('lotes.index') }}"
-               class="inline-block px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded transition">
-                ← Volver a Lotes
-            </a>
+                    <tbody>
+                        @forelse($lote->documentos as $doc)
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 py-2">
+                                    {{ $doc->cdc }}
+                                </td>
+                                <td class="border border-gray-200 px-3 py-2">
+                                    {{ $doc->tipo_documento }}
+                                </td>
+                                <td class="border border-gray-200 px-3 py-2 text-right">
+                                    Gs. {{ number_format($doc->total, 0, '.', '.') }}
+                                </td>
+                                <td class="border border-gray-200 px-3 py-2 text-center">
+                                    <a href="{{ route('documentos.show', $doc->id) }}"
+                                       class="text-blue-600 hover:text-blue-800 font-semibold text-xs">
+                                        Ver documento
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-6 text-sm text-gray-500">
+                                    Este lote no contiene documentos.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
-</x-app-layout>
+
+</div>
+
+@endsection

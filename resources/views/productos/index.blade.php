@@ -1,77 +1,101 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h1 class="text-xl font-semibold text-gray-100">Productos</h1>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg shadow">
+@section('title', 'Productos')
 
-        {{-- Filtros + botón --}}
-        <div class="flex justify-between items-center mb-5">
+@section('content')
 
-            {{-- BUSCADOR --}}
-            <form method="GET" class="flex space-x-2">
-                <input type="text" name="buscar"
-                       class="bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 w-64 focus:ring focus:ring-blue-600 focus:outline-none"
-                       placeholder="Buscar..." value="{{ request('buscar') }}">
+<div class="max-w-6xl mx-auto space-y-6">
 
-                <button
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
-                    Buscar
-                </button>
-            </form>
+    {{-- ENCABEZADO --}}
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">
+            📦 Productos
+        </h1>
 
-            {{-- NUEVO PRODUCTO --}}
-            <a href="{{ route('productos.create') }}"
-               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition shadow">
-                + Nuevo Producto
-            </a>
-        </div>
+        <a href="{{ route('productos.create') }}"
+           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow-sm transition">
+            + Nuevo Producto
+        </a>
+    </div>
 
-        {{-- Tabla --}}
+    {{-- CARD PRINCIPAL --}}
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm p-6">
+
+        {{-- FILTRO --}}
+        <form method="GET" class="flex items-center space-x-2 mb-4">
+
+            <input
+                type="text"
+                name="buscar"
+                placeholder="Buscar por descripción o código..."
+                value="{{ request('buscar') }}"
+                class="w-64 bg-gray-50 border border-gray-300 px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm transition">
+                Buscar
+            </button>
+
+        </form>
+
+        {{-- TABLA --}}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
+            <table class="w-full text-sm border-collapse text-gray-700">
+
                 <thead>
-                    <tr class="bg-gray-800 text-gray-300">
-                        <th class="border border-gray-700 px-3 py-2">Código</th>
-                        <th class="border border-gray-700 px-3 py-2">Descripción</th>
-                        <th class="border border-gray-700 px-3 py-2">IVA</th>
-                        <th class="border border-gray-700 px-3 py-2">Precio</th>
-                        <th class="border border-gray-700 px-3 py-2">Acciones</th>
+                    <tr class="bg-gray-100 text-gray-700">
+                        <th class="border border-gray-200 px-3 py-2 text-left">Código</th>
+                        <th class="border border-gray-200 px-3 py-2 text-left">Descripción</th>
+                        <th class="border border-gray-200 px-3 py-2 text-center">IVA</th>
+                        <th class="border border-gray-200 px-3 py-2 text-right">Precio 1</th>
+                        <th class="border border-gray-200 px-3 py-2 text-center">Acciones</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     @foreach($productos as $p)
-                    <tr class="hover:bg-gray-800 transition">
-                        <td class="border border-gray-800 px-3 py-2 text-gray-200">{{ $p->codigo }}</td>
-                        <td class="border border-gray-800 px-3 py-2 text-gray-200">{{ $p->descripcion }}</td>
-                        <td class="border border-gray-800 px-3 py-2 text-gray-200">{{ $p->iva }}%</td>
-                        <td class="border border-gray-800 px-3 py-2 text-gray-200">
+                    <tr class="hover:bg-gray-50">
+
+                        <td class="border border-gray-200 px-3 py-2">{{ $p->codigo }}</td>
+
+                        <td class="border border-gray-200 px-3 py-2">{{ $p->descripcion }}</td>
+
+                        <td class="border border-gray-200 px-3 py-2 text-center">{{ $p->iva }}%</td>
+
+                        <td class="border border-gray-200 px-3 py-2 text-right">
                             Gs. {{ number_format($p->precio_1,0,'.','.') }}
                         </td>
-                        <td class="border border-gray-800 px-3 py-2 space-x-4">
 
-                            <a class="text-blue-400 hover:text-blue-300"
-                               href="{{ route('productos.show', $p) }}">
+                        <td class="border border-gray-200 px-3 py-2 text-center space-x-4">
+
+                            {{-- VER --}}
+                            <a href="{{ route('productos.show', $p) }}"
+                               class="text-blue-600 hover:text-blue-800 font-semibold">
                                 Ver
                             </a>
 
-                            <a class="text-orange-400 hover:text-orange-300"
-                               href="{{ route('productos.edit', $p) }}">
+                            {{-- EDITAR --}}
+                            <a href="{{ route('productos.edit', $p) }}"
+                               class="text-orange-600 hover:text-orange-800 font-semibold">
                                 Editar
                             </a>
 
                         </td>
+
                     </tr>
                     @endforeach
                 </tbody>
+
             </table>
         </div>
 
-        {{-- Paginación --}}
-        <div class="mt-4 text-gray-300">
+        {{-- PAGINACIÓN --}}
+        <div class="mt-4">
             {{ $productos->links() }}
         </div>
 
     </div>
-</x-app-layout>
+
+</div>
+
+@endsection

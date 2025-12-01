@@ -43,39 +43,69 @@ class SifenClient
      * Generar, firmar y preparar un DE (pero sin enviar todavía)
      */
     public function prepararDocumento(Documento $documento): Documento
-    {
-        // 1) Generar CDC
-        $documento->cdc = $this->cdcGenerator->generar([
-            'tipo_documento'     => $documento->tipo_documento,
-            'establecimiento'    => $documento->establecimiento,
-            'punto_expedicion'   => $documento->punto_expedicion,
-            'numero'             => $documento->numero,
-            'tipo_contribuyente' => 1,
-            'ruc'                => $documento->empresa->ruc,
-            'dv_ruc'             => $documento->empresa->dv,
-            'fecha'              => str_replace('-', '', $documento->fecha),
-            'tipo_emision'       => 1,
-            'control'            => 1,
-        ]);
+{
+    // 1) Generar CDC
+    $documento->cdc = $this->cdcGenerator->generar([
+        'tipo_documento'     => $documento->tipo_documento,
+        'establecimiento'    => $documento->establecimiento,
+        'punto_expedicion'   => $documento->punto_expedicion,
+        'numero'             => $documento->numero,
+        'tipo_contribuyente' => 1,
+        'ruc'                => $documento->empresa->ruc,
+        'dv_ruc'             => $documento->empresa->dv,
+        'fecha'              => str_replace('-', '', $documento->fecha),
+        'tipo_emision'       => 1,
+        'control'            => 1,
+    ]);
 
-        // 2) Generar XML
-        $xml = $this->xmlBuilder->buildFromDocumento($documento);
-        $documento->xml_generado = $xml;
+    // 👉 Evento: CDC generado
+    $this->registrarEvento([
+        'documento_id' => $documento->id,
+        'codigo'       => 'DE_CDC_GENERADO',
+        'tipo'         => 'preparar_documento',
+        'descripcion'  => 'CDC generado para el documento',
+        'mensaje'      => $documento->cdc,
+    ]);
 
-        // 3) Firmar
+    // 2) Generar XML
+    $xml = $this->xmlBuilder->buildFromDocumento($documento);
+    $documento->xml_generado = $xml;
+
+    // 👉 Evento: XML generado
+    $this->registrarEvento([
+        'documento_id' => $documento->id,
+        'codigo'       => 'DE_XML_GENERADO',
+        'tipo'         => 'preparar_documento',
+        'descripcion'  => 'XML generado para el documento',
+        'mensaje'      => 'XML generado correctamente',
+        'xml'          => $xml,
+    ]);
+
+    // 3) Firmar
         $firmado = $this->signer->sign(
             $xml,
-            $documento->empresa->cert_publico,
-            $documento->empresa->cert_privado,
-            $documento->empresa->cert_password
+            $documento->empresa->cert_publico,   // ruta relativa al storage
+            $documento->empresa->cert_privado,   // ruta relativa al storage
+            $documento->empresa->cert_password   // password del .key (o null si no tiene)
         );
 
-        $documento->xml_firmado = $firmado;
 
-        $documento->save();
+    $documento->xml_firmado = $firmado;
+    $documento->save();
 
-        return $documento;
-    }
+    // 👉 Evento: XML firmado
+    $this->registrarEvento([
+        'documento_id' => $documento->id,
+        'codigo'       => 'DE_XML_FIRMADO',
+        'tipo'         => 'firma_xml',
+        'descripcion'  => 'XML firmado correctamente',
+        'mensaje'      => 'XML firmado para envío a lote',
+        'xml'          => $firmado,
+    ]);
+
+    return $documento;
+}
+
 
     /**
      * Enviar un lote de documentos a SIFEN
@@ -83,11 +113,19 @@ class SifenClient
     public function enviarLote(Lote $lote): array
     {
         try {
+            // 1) Construir el XML del lote a partir de los DE firmados
             $payload = $this->loteService->buildLotePayload($lote);
 
+            // 2) Guardar en la tabla lotes como "xml_enviado"
+            $lote->xml_enviado   = $payload;
+            $lote->fecha_envio   = now();
+            $lote->estado        = 'enviado'; // o 'pendiente_respuesta' si preferís ese nombre
+            $lote->save();
+
+            // 3) Enviar al SIFEN vía SOAP
             $responseXml = $this->soapClient->recibeLote($payload);
 
-            // Log
+            // 4) Log técnico
             SifenLog::create([
                 'accion'    => 'envio_lote',
                 'resultado' => 'success',
@@ -95,16 +133,31 @@ class SifenClient
                 'response'  => $responseXml,
             ]);
 
-            // Extraer datos XML
+            // 5) Extraer datos del XML de respuesta
             preg_match('/<dCodRes>(.*?)<\/dCodRes>/', $responseXml, $cod);
             preg_match('/<dMsgRes>(.*?)<\/dMsgRes>/', $responseXml, $msg);
             preg_match('/<dProtConsLote>(.*?)<\/dProtConsLote>/', $responseXml, $prot);
 
-            $codigo = $cod[1] ?? '0000';
-            $mensaje = $msg[1] ?? 'Sin mensaje';
+            $codigo    = $cod[1] ?? '0000';
+            $mensaje   = $msg[1] ?? 'Sin mensaje';
             $protocolo = $prot[1] ?? null;
 
-            // Guardar evento
+            // 6) Actualizar el lote con la respuesta
+            $lote->xml_respuesta   = $responseXml;
+            $lote->fecha_respuesta = now();
+            $lote->respuesta       = $mensaje;
+
+            // Si querés marcar un estado según código SIFEN:
+            // 0300 = recibido OK (ejemplo típico)
+            if ($codigo === '0300') {
+                $lote->estado = 'recibido'; // o 'procesado', como uses
+            } else {
+                $lote->estado = 'error_envio'; // o 'rechazado', etc.
+            }
+
+            $lote->save();
+
+            // 7) Guardar evento funcional
             $this->registrarEvento([
                 'lote_id'     => $lote->id,
                 'codigo'      => $codigo,
@@ -124,8 +177,9 @@ class SifenClient
 
         } catch (Throwable $e) {
 
+            // Evento funcional de error
             $this->registrarEvento([
-                'lote_id'     => $lote->id,
+                'lote_id'     => $lote->id ?? null,
                 'codigo'      => 'ERROR',
                 'tipo'        => 'envio_lote_error',
                 'descripcion' => 'Error al enviar lote',
@@ -133,11 +187,21 @@ class SifenClient
                 'xml'         => null,
             ]);
 
+            // Log técnico
             SifenLog::create([
                 'accion'    => 'envio_lote',
                 'resultado' => 'error',
                 'error'     => $e->getMessage(),
             ]);
+
+            // Marcar el lote como error también (si existe)
+            try {
+                $lote->estado    = 'error_envio';
+                $lote->respuesta = $e->getMessage();
+                $lote->save();
+            } catch (\Throwable $ignored) {
+                // por si vino un lote sin persistir
+            }
 
             return [
                 'ok'    => false,
@@ -145,6 +209,7 @@ class SifenClient
             ];
         }
     }
+
 
     /**
      * Consultar estado de un lote
@@ -160,14 +225,30 @@ class SifenClient
             'response'  => $response,
         ]);
 
-        // Extraer códigos
+        // Extraer códigos de la respuesta
         preg_match('/<dCodResLot>(.*?)<\/dCodResLot>/', $response, $cod);
         preg_match('/<dMsgResLot>(.*?)<\/dMsgResLot>/', $response, $msg);
 
-        $codigo = $cod[1] ?? '---';
+        $codigo  = $cod[1] ?? '---';
         $mensaje = $msg[1] ?? 'Sin mensaje';
 
         $lote = Lote::where('numero_lote', $numeroLote)->first();
+
+        if ($lote) {
+            // Guardamos la última respuesta de consulta también
+            $lote->xml_respuesta   = $response;
+            $lote->fecha_respuesta = now();
+            $lote->respuesta       = $mensaje;
+
+            // Podés mapear el estado según código que devuelva SIFEN
+            if ($codigo === '0300') {
+                $lote->estado = 'aceptado'; // o 'aprobado', como uses en tu UI
+            } else {
+                $lote->estado = 'rechazado'; // o 'observado', etc.
+            }
+
+            $lote->save();
+        }
 
         $this->registrarEvento([
             'lote_id'     => $lote->id ?? null,
@@ -185,6 +266,7 @@ class SifenClient
             'raw_xml' => $response,
         ];
     }
+
 
     /**
      * Consultar CDC de un documento individual

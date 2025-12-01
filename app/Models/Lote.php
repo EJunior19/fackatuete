@@ -35,6 +35,7 @@ class Lote extends Model
 
     public function documentos()
     {
-        return $this->hasMany(Documento::class, 'numero_lote', 'numero_lote');
+        // 🔥 USAMOS lote_id COMO CLAVE FORÁNEA
+        return $this->hasMany(Documento::class, 'lote_id', 'id');
     }
 }

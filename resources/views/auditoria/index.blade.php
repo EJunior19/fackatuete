@@ -1,15 +1,25 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h1 class="text-xl font-semibold text-gray-100">
+            🕵️ Auditoría del Sistema
+        </h1>
+    </x-slot>
 
-@section('content')
+    <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700">
 
-<div class="px-6 py-4">
+        <h2 class="text-lg font-bold text-gray-100 mb-2">
+            Registro de acciones del sistema
+        </h2>
 
-    <h1 class="text-2xl font-bold text-slate-800 mb-4">Auditoría</h1>
+        <p class="text-gray-400 mb-6">
+            Este módulo permitirá visualizar acciones realizadas por los usuarios.
+        </p>
 
-    <p class="text-slate-600">
-        Módulo de auditoría en construcción.
-    </p>
+        <div class="p-6 bg-gray-800 border border-gray-700 rounded-lg text-gray-300">
+            <p class="text-center text-gray-400">
+                🔧 El módulo de auditoría se encuentra actualmente en construcción.
+            </p>
+        </div>
 
-</div>
-
-@endsection
+    </div>
+</x-app-layout>

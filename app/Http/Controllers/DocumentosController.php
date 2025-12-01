@@ -6,6 +6,14 @@ use App\Models\Documento;
 use App\Models\Empresa;
 use App\Models\Numeracion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+// 👇 servicios SIFEN / Firma
+use App\Services\Sifen\XMLBuilder;
+use App\Services\Firma\XmlSigner;
+
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DocumentosController extends Controller
 {
@@ -152,12 +160,85 @@ class DocumentosController extends Controller
 
     public function firmar($id)
     {
-        $doc     = Documento::findOrFail($id);
-        $empresa = Empresa::findOrFail($doc->empresa_id);
+        $de = Documento::with(['empresa', 'items', 'timbrado'])
+            ->findOrFail($id);
 
-        return response()->json([
-            'status'  => 'ok',
-            'mensaje' => "Aquí se firmaría el XML para la empresa {$empresa->id}",
-        ]);
+        if (!$de->empresa_id) {
+            $empresa = Empresa::first();
+            if (!$empresa) {
+                Log::error("No existe empresa para firmar DE {$de->id}");
+                abort(500, 'No existe empresa configurada para facturación.');
+            }
+
+            $de->empresa_id = $empresa->id;
+            $de->save();
+            $de->load('empresa');
+        }
+
+        try {
+            // 1) Generar XML sin firma
+            $xml = XMLBuilder::generar($de);
+
+            $empresa = $de->empresa;
+            $p12Path = storage_path($empresa->cert_p12_path);
+
+            if (!file_exists($p12Path)) {
+                throw new \RuntimeException("Certificado P12 no encontrado en: {$p12Path}");
+            }
+
+            $pkcs12 = file_get_contents($p12Path);
+            $certs  = [];
+
+            if (!openssl_pkcs12_read($pkcs12, $certs, $empresa->cert_password)) {
+                throw new \RuntimeException("No se pudo leer el certificado P12 (contraseña incorrecta o archivo inválido).");
+            }
+
+            // 2) Firmar
+            $xmlFirmado = XmlSigner::sign($xml, $certs['pkey'], $certs['cert']);
+
+            // 3) Guardar en la BD
+            $de->xml_generado = $xml;
+            $de->xml_firmado  = $xmlFirmado;
+            $de->estado_sifen = 'firmado';   // opcional pero útil
+            $de->save();
+
+            // 4) (Opcional) guardar copia en storage
+            $fileName = "de_firmado_{$de->id}.xml";
+            Storage::disk('local')->put("de_firmados/{$fileName}", $xmlFirmado);
+
+            return response()->json([
+                'status'   => 'ok',
+                'mensaje'  => "XML firmado correctamente para el DE {$de->id}",
+                'archivo'  => $fileName,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Error al firmar DE {$de->id}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'mensaje' => 'Error al generar o firmar el XML: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function pdf($id)
+    {
+        // Traemos el documento con todo lo necesario
+        $documento = Documento::with(['empresa', 'items', 'timbrado'])->findOrFail($id);
+
+        // Vista Blade que va a renderizar el PDF
+        $pdf = Pdf::loadView('documentos.pdf', [
+            'documento' => $documento,
+        ])->setPaper('a4', 'portrait');
+
+        // Nombre del archivo
+        $numero = $documento->numero ?? str_pad($documento->id, 7, '0', STR_PAD_LEFT);
+        $fileName = "Factura_{$numero}.pdf";
+
+        return $pdf->download($fileName);
+        // si querés que se abra en el navegador:
+        // return $pdf->stream($fileName);
     }
 }

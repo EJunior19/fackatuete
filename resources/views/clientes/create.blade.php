@@ -1,62 +1,93 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h1 class="text-xl font-semibold text-gray-100">Nuevo Cliente</h1>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg shadow max-w-xl mx-auto">
+@section('title', 'Nuevo Cliente')
 
-        <form method="POST" action="{{ route('clientes.store') }}" class="text-gray-300">
+@section('content')
+
+<div class="max-w-xl mx-auto space-y-4">
+
+    {{-- Encabezado --}}
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-800">
+            👤 Nuevo Cliente
+        </h1>
+
+        <a href="{{ route('clientes.index') }}"
+           class="text-sm text-blue-600 hover:text-blue-800">
+            ← Volver a clientes
+        </a>
+    </div>
+
+    {{-- Card principal --}}
+    <div class="bg-white border border-gray-200 rounded-md shadow-sm p-6">
+
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            Registrar cliente
+        </h2>
+
+        <form method="POST" action="{{ route('clientes.store') }}" class="space-y-5">
             @csrf
 
             {{-- RUC --}}
-            <div class="mb-4">
-                <label class="text-gray-400">RUC</label>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">RUC</label>
                 <input name="ruc" maxlength="15"
-                    class="bg-gray-800 border border-gray-700 text-gray-200 w-full rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
             </div>
 
             {{-- DV --}}
-            <div class="mb-4">
-                <label class="text-gray-400">DV</label>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">DV</label>
                 <input name="dv" maxlength="2"
-                    class="bg-gray-800 border border-gray-700 text-gray-200 w-full rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
             </div>
 
-            {{-- RAZÓN SOCIAL --}}
-            <div class="mb-4">
-                <label class="text-gray-400">Razón Social</label>
+            {{-- Razón Social --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Razón Social</label>
                 <input name="razon_social" maxlength="150"
-                    class="bg-gray-800 border border-gray-700 text-gray-200 w-full rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
             </div>
 
-            {{-- TELÉFONO --}}
-            <div class="mb-4">
-                <label class="text-gray-400">Teléfono</label>
+            {{-- Teléfono --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                 <input name="telefono" maxlength="20"
-                    class="bg-gray-800 border border-gray-700 text-gray-200 w-full rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
             </div>
 
-            {{-- EMAIL --}}
-            <div class="mb-4">
-                <label class="text-gray-400">Email</label>
+            {{-- Email --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input type="email" name="email" maxlength="120"
-                    class="bg-gray-800 border border-gray-700 text-gray-200 w-full rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
             </div>
 
-            {{-- DIRECCIÓN --}}
-            <div class="mb-4">
-                <label class="text-gray-400">Dirección</label>
+            {{-- Dirección --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                 <input name="direccion" maxlength="255"
-                    class="bg-gray-800 border border-gray-700 text-gray-200 w-full rounded px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
             </div>
 
-            {{-- BOTÓN --}}
-            <button
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded transition">
-                Guardar
-            </button>
+            {{-- Botón --}}
+            <div>
+                <button
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md shadow-sm transition">
+                    Guardar
+                </button>
+            </div>
 
         </form>
 
     </div>
-</x-app-layout>
+
+</div>
+
+@endsection

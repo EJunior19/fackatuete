@@ -8,6 +8,8 @@ use App\Models\Numeracion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Services\Sifen\SifenClient;
+
 
 // 👇 servicios SIFEN / Firma
 use App\Services\Sifen\XMLBuilder;
@@ -158,68 +160,31 @@ class DocumentosController extends Controller
             ->with('success', 'Documento eliminado.');
     }
 
-    public function firmar($id)
+     public function firmar($id, SifenClient $sifen)
     {
-        $de = Documento::with(['empresa', 'items', 'timbrado'])
-            ->findOrFail($id);
-
-        if (!$de->empresa_id) {
-            $empresa = Empresa::first();
-            if (!$empresa) {
-                Log::error("No existe empresa para firmar DE {$de->id}");
-                abort(500, 'No existe empresa configurada para facturación.');
-            }
-
-            $de->empresa_id = $empresa->id;
-            $de->save();
-            $de->load('empresa');
-        }
+        $documento = Documento::with(['empresa', 'items', 'cliente'])->findOrFail($id);
 
         try {
-            // 1) Generar XML sin firma
-            $xml = XMLBuilder::generar($de);
-
-            $empresa = $de->empresa;
-            $p12Path = storage_path($empresa->cert_p12_path);
-
-            if (!file_exists($p12Path)) {
-                throw new \RuntimeException("Certificado P12 no encontrado en: {$p12Path}");
+            // Si el documento todavía no tiene CDC o XML firmado,
+            // lo preparamos con el flujo nuevo
+            if (empty($documento->cdc) || empty($documento->xml_firmado)) {
+                $documento = $sifen->prepararDocumento($documento);
             }
 
-            $pkcs12 = file_get_contents($p12Path);
-            $certs  = [];
+            // 👇 Aquí, en el futuro, vas a llamar al cliente real de SIFEN
+            // por ejemplo: $sifen->enviarASifen($documento);
+            // Por ahora solo devolvemos OK de la firma/preparación.
 
-            if (!openssl_pkcs12_read($pkcs12, $certs, $empresa->cert_password)) {
-                throw new \RuntimeException("No se pudo leer el certificado P12 (contraseña incorrecta o archivo inválido).");
-            }
+            return redirect()
+            ->route('documentos.show', $documento->id)
+            ->with('success', 'Documento preparado y firmado correctamente.');
+    } catch (\Throwable $e) {
+        report($e);
 
-            // 2) Firmar
-            $xmlFirmado = XmlSigner::sign($xml, $certs['pkey'], $certs['cert']);
-
-            // 3) Guardar en la BD
-            $de->xml_generado = $xml;
-            $de->xml_firmado  = $xmlFirmado;
-            $de->estado_sifen = 'firmado';   // opcional pero útil
-            $de->save();
-
-            // 4) (Opcional) guardar copia en storage
-            $fileName = "de_firmado_{$de->id}.xml";
-            Storage::disk('local')->put("de_firmados/{$fileName}", $xmlFirmado);
-
-            return response()->json([
-                'status'   => 'ok',
-                'mensaje'  => "XML firmado correctamente para el DE {$de->id}",
-                'archivo'  => $fileName,
-            ]);
-        } catch (\Throwable $e) {
-            Log::error("Error al firmar DE {$de->id}: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'status'  => 'error',
-                'mensaje' => 'Error al generar o firmar el XML: ' . $e->getMessage(),
-            ], 500);
+        return redirect()
+            ->route('documentos.show', $documento->id)
+            ->with('error', 'Error al generar o firmar el XML: '.$e->getMessage());
+    
         }
     }
 

@@ -94,7 +94,7 @@
                     </x-primary-button>
                 </div>
 
-            </form>
+            </form>                                                                                                                                                                                                                                                       
 
         </div>
 
@@ -106,3 +106,4 @@
     </div>
 
 </x-guest-layout>
+                                                    

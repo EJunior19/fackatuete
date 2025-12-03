@@ -42,69 +42,78 @@ class SifenClient
     /**
      * Generar, firmar y preparar un DE (pero sin enviar todavía)
      */
-    public function prepararDocumento(Documento $documento): Documento
-{
-    // 1) Generar CDC
-    $documento->cdc = $this->cdcGenerator->generar([
-        'tipo_documento'     => $documento->tipo_documento,
-        'establecimiento'    => $documento->establecimiento,
-        'punto_expedicion'   => $documento->punto_expedicion,
-        'numero'             => $documento->numero,
-        'tipo_contribuyente' => 1,
-        'ruc'                => $documento->empresa->ruc,
-        'dv_ruc'             => $documento->empresa->dv,
-        'fecha'              => str_replace('-', '', $documento->fecha),
-        'tipo_emision'       => 1,
-        'control'            => 1,
-    ]);
+  public function prepararDocumento(Documento $documento): Documento
+    {
+        // Aseguramos que tenga ID en BD (por las dudas)
+        if (! $documento->exists) {
+            $documento->save();
+        }
 
-    // 👉 Evento: CDC generado
-    $this->registrarEvento([
-        'documento_id' => $documento->id,
-        'codigo'       => 'DE_CDC_GENERADO',
-        'tipo'         => 'preparar_documento',
-        'descripcion'  => 'CDC generado para el documento',
-        'mensaje'      => $documento->cdc,
-    ]);
+        // Solo generamos CDC si aún no tiene
+        if (empty($documento->cdc)) {
 
-    // 2) Generar XML
-    $xml = $this->xmlBuilder->buildFromDocumento($documento);
-    $documento->xml_generado = $xml;
+            // Usamos el ID del documento como base del control
+            $controlBase = $documento->id ?? random_int(1, 99999999);
 
-    // 👉 Evento: XML generado
-    $this->registrarEvento([
-        'documento_id' => $documento->id,
-        'codigo'       => 'DE_XML_GENERADO',
-        'tipo'         => 'preparar_documento',
-        'descripcion'  => 'XML generado para el documento',
-        'mensaje'      => 'XML generado correctamente',
-        'xml'          => $xml,
-    ]);
+            $documento->cdc = $this->cdcGenerator->generar([
+                'tipo_documento'     => $documento->tipo_documento,
+                'establecimiento'    => $documento->establecimiento,
+                'punto_expedicion'   => $documento->punto_expedicion,
+                'numero'             => $documento->numero,            // tu correlativo
+                'tipo_contribuyente' => 1,
+                'ruc'                => $documento->empresa->ruc,
+                'dv_ruc'             => $documento->empresa->dv,
+                'fecha'              => str_replace('-', '', $documento->fecha),
+                'tipo_emision'       => 1,
+                // 👇 ahora es único por documento
+                'control'            => $controlBase,
+            ]);
 
-    // 3) Firmar
+            // Evento CDC generado
+            $this->registrarEvento([
+                'documento_id' => $documento->id,
+                'codigo'       => 'DE_CDC_GENERADO',
+                'tipo'         => 'preparar_documento',
+                'descripcion'  => 'CDC generado para el documento',
+                'mensaje'      => $documento->cdc,
+            ]);
+        }
+
+        // 2) Generar XML
+        $xml = $this->xmlBuilder->buildFromDocumento($documento);
+        $documento->xml_generado = $xml;
+
+        $this->registrarEvento([
+            'documento_id' => $documento->id,
+            'codigo'       => 'DE_XML_GENERADO',
+            'tipo'         => 'preparar_documento',
+            'descripcion'  => 'XML generado para el documento',
+            'mensaje'      => 'XML generado correctamente',
+            'xml'          => $xml,
+        ]);
+
+        // 3) Firmar
         $firmado = $this->signer->sign(
             $xml,
-            $documento->empresa->cert_publico,   // ruta relativa al storage
-            $documento->empresa->cert_privado,   // ruta relativa al storage
-            $documento->empresa->cert_password   // password del .key (o null si no tiene)
+            $documento->empresa->cert_publico,
+            $documento->empresa->cert_privado,
+            $documento->empresa->cert_password
         );
 
+        $documento->xml_firmado = $firmado;
+        $documento->save();
 
-    $documento->xml_firmado = $firmado;
-    $documento->save();
+        $this->registrarEvento([
+            'documento_id' => $documento->id,
+            'codigo'       => 'DE_XML_FIRMADO',
+            'tipo'         => 'firma_xml',
+            'descripcion'  => 'XML firmado correctamente',
+            'mensaje'      => 'XML firmado para envío a lote',
+            'xml'          => $firmado,
+        ]);
 
-    // 👉 Evento: XML firmado
-    $this->registrarEvento([
-        'documento_id' => $documento->id,
-        'codigo'       => 'DE_XML_FIRMADO',
-        'tipo'         => 'firma_xml',
-        'descripcion'  => 'XML firmado correctamente',
-        'mensaje'      => 'XML firmado para envío a lote',
-        'xml'          => $firmado,
-    ]);
-
-    return $documento;
-}
+        return $documento;
+    }
 
 
     /**

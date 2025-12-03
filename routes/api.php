@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DocumentoApiController;
 use App\Http\Controllers\Api\LoteApiController;
 use App\Http\Controllers\Api\EventoApiController;
+use App\Http\Controllers\Api\DocumentoErpController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +48,7 @@ Route::prefix('v1')
         Route::post('/documentos/{doc}/firmar',   [DocumentoApiController::class, 'firmar']);
         Route::get('/documentos/{doc}/cdc',       [DocumentoApiController::class, 'consultarCdc']);
 
+        Route::post('/documentos/desde-erp',      [DocumentoErpController::class, 'store']);
         /*
         |--------------------------------------------------------------------------
         | LOTES (API)

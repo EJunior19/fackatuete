@@ -74,7 +74,7 @@
                         @forelse($lote->documentos as $doc)
                             <tr class="hover:bg-gray-50">
                                 <td class="border border-gray-200 px-3 py-2">
-                                    {{ $doc->cdc }}
+                                    {{ $doc->cdc ?? '—' }}
                                 </td>
                                 <td class="border border-gray-200 px-3 py-2">
                                     {{ $doc->tipo_documento }}

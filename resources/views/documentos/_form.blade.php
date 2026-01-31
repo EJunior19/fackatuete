@@ -3,7 +3,33 @@
     @if(isset($method) && $method === 'PUT') @method('PUT') @endif
 
     {{-- Tipo y fecha --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div>
+            <label class="block text-sm font-semibold mb-1">Establecimiento</label>
+            <input
+                type="number"
+                name="establecimiento"
+                placeholder="Ej: 1"
+                min="1"
+                max="999"
+                value="{{ old('establecimiento', $documento->establecimiento ?? 1) }}"
+                class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800
+                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Punto Expedición</label>
+            <input
+                type="number"
+                name="punto_expedicion"
+                placeholder="Ej: 1"
+                min="1"
+                max="999"
+                value="{{ old('punto_expedicion', $documento->punto_expedicion ?? 1) }}"
+                class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800
+                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
         <div>
             <label class="block text-sm font-semibold mb-1">Tipo de documento</label>
             <select name="tipo_documento"
@@ -260,17 +286,16 @@ document.addEventListener("DOMContentLoaded", () => {
     function calcularFila(row) {
         const cant   = Number(row.children[1].value || 0);
         const precio = Number(row.children[2].value || 0);
-        const iva    = Number(row.children[3].value || 0);
 
         const sub = cant * precio;
-        row.children[4].value = sub;
 
-        let total = sub;
-        if (iva === 10) total = sub * 1.10;
-        if (iva === 5)  total = sub * 1.05;
+        // Subtotal = precio * cantidad (IVA incluido)
+        row.children[4].value = sub.toFixed(0);
 
-        row.children[5].value = total;
+        // Total de la fila = subtotal (NO se suma IVA)
+        row.children[5].value = sub.toFixed(0);
     }
+
 
     function calcularTotalGeneral() {
         let total = 0;
